@@ -1,6 +1,8 @@
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
 
+export const prisma = new PrismaClient({ log: ["query"] });
 dotenv.config();
 
 export const pool = mysql.createPool({
@@ -15,3 +17,15 @@ export const pool = mysql.createPool({
   connectionLimit: 10, // 몇 개의 커넥션을 가지게끔 할 것인지
   queueLimit: 0, // getConnection에서 오류가 발생하기 전에 Pool에 대기할 요청의 개수 한도
 });
+
+// User 데이터 삽입
+export const addUser = async (data) => {
+    const user = await prisma.user.findFirst({ where: { email: data.email } });
+    if (user) {
+      return null;
+    }
+  
+    const created = await prisma.user.create({ data: data });
+    return created.id;
+  };
+  
