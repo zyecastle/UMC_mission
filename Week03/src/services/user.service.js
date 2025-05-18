@@ -1,4 +1,5 @@
-import { responseFromUser } from "./user.dto";
+import { bodyToUser } from "../dtos/user.dto.js";
+
 import {
   addUser,
   getUser,

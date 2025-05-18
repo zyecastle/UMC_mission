@@ -1,3 +1,4 @@
+
 // 가게 관련 데이터 구조
 class StroeDto {
     constructor(data) {
@@ -31,3 +32,4 @@ export const responseFromUser = ({ user, preferences }) => {
     };
   }
   
+
