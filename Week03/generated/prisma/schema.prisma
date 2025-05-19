@@ -14,8 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique(map: "email") @db.VarChar(255)
@@ -27,7 +25,7 @@ model User {
   phoneNumber   String   @map("phone_number") @db.VarChar(15)
 
   userFavorCategories UserFavorCategory[]
-  storeReviews UserStoreReview[]
+  storeReviews        UserStoreReview[]
 
   @@map("user")
 }
@@ -54,16 +52,16 @@ model UserFavorCategory {
 }
 
 model Store {
-  id        Int               @id @default(autoincrement())
-  name      String            @db.VarChar(100)
-  reviews   UserStoreReview[]
+  id      Int               @id @default(autoincrement())
+  name    String            @db.VarChar(100)
+  reviews UserStoreReview[]
 }
 
 model UserStoreReview {
-  id       Int    @id @default(autoincrement())
-  storeId  Int    @map("store_id")
-  userId   Int    @map("user_id")
-  content  String @db.Text()
-  store    Store  @relation(fields: [storeId], references: [id])
-  user     User   @relation(fields: [userId], references: [id])
+  id      Int    @id @default(autoincrement())
+  storeId Int    @map("store_id")
+  userId  Int    @map("user_id")
+  content String @db.Text()
+  store   Store  @relation(fields: [storeId], references: [id])
+  user    User   @relation(fields: [userId], references: [id])
 }

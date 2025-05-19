@@ -16,4 +16,9 @@ class StoreService {
   }
 }
 
+export const listStoreReviews = async (storeId) => {
+  const reviews = await getAllStoreReviews(storeId);
+  return responseFromReviews(reviews);
+};
+
 module.exports = new StoreService();
