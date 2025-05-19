@@ -1,28 +1,72 @@
-const db = require('../../db.config');
+import { pool } from "../db.config.js";
+import prisma from "../db.config.js";
 
-class MissionRepository {
-  async create(missionData, storeId) {
-    try {
-      const [result] = await db.query(
-        'INSERT INTO missions (title, description, reward, store_id) VALUES (?, ?, ?, ?)',
-        [missionData.title, missionData.description, missionData.reward, storeId]
-      );
-
-      const [missions] = await db.query('SELECT * FROM missions WHERE id = ?', [result.insertId]);
-      return missions[0];
-    } catch (error) {
-      throw new Error(`Failed to create mission: ${error.message}`);
-    }
+export const checkStoreExists = async (storeId) => {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.query("SELECT id FROM store WHERE id = ?", [storeId]);
+    return rows.length > 0;
+  } finally {
+    conn.release();
   }
+};
 
-  async findById(id) {
-    try {
-      const [missions] = await db.query('SELECT * FROM missions WHERE id = ?', [id]);
-      return missions.length > 0 ? missions[0] : null;
-    } catch (error) {
-      throw new Error(`Failed to find mission by id: ${error.message}`);
-    }
-  }
-}
+export const insertMission = async (storeId, data) => {
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  if (!store) return null;
 
-module.exports = new MissionRepository();
+  const mission = await prisma.mission.create({
+    data: {
+      storeId,
+      point: data.point,
+      content: data.content,
+      isActive: true,
+    },
+  });
+
+  return mission;
+};
+
+export const getMissionsByStoreId = async (storeId) => {
+    return await prisma.mission.findMany({
+      where: {
+        storeId: storeId,
+        isActive: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      select: {
+        id: true,
+        point: true,
+        content: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
+  };
+
+export const isAlreadyChallenged = async (userId, missionId) => {
+    const existing = await prisma.userMission.findUnique({
+      where: {
+        userId_missionId: {
+          userId,
+          missionId,
+        },
+      },
+    });
+  
+    return !!existing;
+  };
+  
+export const insertUserMission = async (userId, missionId) => {
+    const userMission = await prisma.userMission.create({
+      data: {
+        userId,
+        missionId,
+        status: "in_progress", // 기본값
+      },
+    });
+    console.log("insertUserMission 반환값:", userMission); // ✅ 여기도 찍어보세요
+    return userMission;
+  };

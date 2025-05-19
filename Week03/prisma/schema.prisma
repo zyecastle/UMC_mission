@@ -6,15 +6,12 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
-
 
 model User {
   id            Int      @id @default(autoincrement())
@@ -23,12 +20,12 @@ model User {
   gender        String   @db.VarChar(15)
   birth         DateTime @db.Date
   address       String   @db.VarChar(255)
-  detailAddress String?  @map("detail_address") @db.VarChar(255)
-  phoneNumber   String   @map("phone_number") @db.VarChar(15)
+  detailAddress String?  @map("detailAddress") @db.VarChar(255)
+  phoneNumber   String   @map("phoneNumber") @db.VarChar(15)
 
   userFavorCategories UserFavorCategory[]
-  storeReviews UserStoreReview[]
-
+  userMissions        UserMission[]  
+  review Review[]
   @@map("user")
 }
 
@@ -36,10 +33,12 @@ model FoodCategory {
   id   Int    @id @default(autoincrement())
   name String @db.VarChar(100)
 
-  userFavorCategories UserFavorCategory[]
+  userFavorCategories UserFavorCategory[]  
+  stores              Store[] 
 
   @@map("food_category")
 }
+
 
 model UserFavorCategory {
   id             Int          @id @default(autoincrement())
@@ -53,17 +52,85 @@ model UserFavorCategory {
   @@map("user_favor_category")
 }
 
-model Store {
-  id        Int               @id @default(autoincrement())
-  name      String            @db.VarChar(100)
-  reviews   UserStoreReview[]
+model Region {
+  id     Int     @id @default(autoincrement())
+  name   String  @db.VarChar(100)
+
+  stores Store[]
+
+  @@map("region")
 }
 
-model UserStoreReview {
-  id       Int    @id @default(autoincrement())
-  storeId  Int    @map("store_id")
-  userId   Int    @map("user_id")
-  content  String @db.Text()
-  store    Store  @relation(fields: [storeId], references: [id])
-  user     User   @relation(fields: [userId], references: [id])
+model Store {
+  id              Int          @id @default(autoincrement())
+  name            String       @db.VarChar(100)
+  description     String?      @db.Text
+  region          Region       @relation(fields: [regionId], references: [id])
+  regionId        Int          @map("region_id")
+  foodCategory    FoodCategory @relation(fields: [foodCategoryId], references: [id])
+  foodCategoryId  Int          @map("food_category_id")
+  address         String       @db.VarChar(255)
+  phoneNumber     String?      @map("phone_number") @db.VarChar(20)
+  createdAt       DateTime     @default(now()) @map("createdAt")
+  updatedAt       DateTime     @updatedAt @map("updatedAt")
+
+  reviews         Review[]
+  missions        Mission[]
+
+  @@map("store")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  storeId   Int      @map("store_id")
+  userId    Int      @map("user_id")
+  title     String   @db.VarChar(255)
+  content   String   @db.Text
+  rating    Decimal    @db.Decimal(2, 1)
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+   store     Store    @relation(fields: [storeId], references: [id])
+   user      User      @relation(fields: [userId], references: [id]) // ✅ 관계 설정
+
+  images    ReviewImage[]
+
+  @@map("review")
+}
+
+model ReviewImage {
+  id        Int     @id @default(autoincrement())
+  review    Review  @relation(fields: [reviewId], references: [id])
+  reviewId  Int     @map("review_id")
+  imageUrl  String  @map("image_url") @db.VarChar(255)
+
+  @@map("review_image")
+}
+
+model Mission {
+  id         Int      @id @default(autoincrement())
+  store      Store    @relation(fields: [storeId], references: [id])
+  storeId    Int      @map("store_id")
+  point      Int
+  content    String   @db.Text
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("createdAt")
+  updatedAt  DateTime @updatedAt @map("updatedAt")
+
+  userMissions UserMission[]
+
+  @@map("mission")
+}
+
+model UserMission {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int      @map("user_id")
+  mission    Mission  @relation(fields: [missionId], references: [id])
+  missionId  Int      @map("mission_id")
+  status     String   @default("in_progress") // ENUM으로 변환 가능
+  startedAt  DateTime @default(now()) @map("startedAt")
+
+  @@unique([userId, missionId], map: "uq_user_mission")
+  @@map("user_mission")
 }

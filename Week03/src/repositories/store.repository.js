@@ -1,28 +1,23 @@
-const db = require('../../db.config');
+import { pool } from "../db.config.js";
+import prisma from "../db.config.js";
 
-class StoreRepository {
-  async create(storeData, regionId) {
-    try {
-      const [result] = await db.query(
-        'INSERT INTO stores (name, address, description, region_id) VALUES (?, ?, ?, ?)',
-        [storeData.name, storeData.address, storeData.description, regionId]
-      );
-
-      const [stores] = await db.query('SELECT * FROM stores WHERE id = ?', [result.insertId]);
-      return stores[0];
-    } catch (error) {
-      throw new Error(`Failed to create store: ${error.message}`);
-    }
+export const insertStore = async (data) => {
+  const conn = await pool.getConnection();
+  try {
+    const [result] = await conn.query(
+      `INSERT INTO store (name, description, region_id, food_category_id, address, phone_number)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        data.name,
+        data.description,
+        data.regionId,
+        data.foodCategoryId,
+        data.address,
+        data.phoneNumber,
+      ]
+    );
+    return result.insertId;
+  } finally {
+    conn.release();
   }
-
-  async findById(id) {
-    try {
-      const [stores] = await db.query('SELECT * FROM stores WHERE id = ?', [id]);
-      return stores.length > 0 ? stores[0] : null;
-    } catch (error) {
-      throw new Error(`Failed to find store by id: ${error.message}`);
-    }
-  }
-}
-
-module.exports = new StoreRepository();
+};

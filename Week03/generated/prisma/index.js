@@ -205,11 +205,12 @@ const config = {
     "db"
   ],
   "activeProvider": "mysql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "mysql://root:020506@localhost:3306/UMC_test"
+        "value": null
       }
     }
   },

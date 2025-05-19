@@ -1,30 +1,49 @@
-const missionService = require('../services/mission.service');
-const MissionDto = require('../dtos/mission.dto');
+import { createMissionService } from "../services/mission.service.js";
+import { bodyToMission } from "../dtos/mission.dto.js";
+import { challengeMissionService } from "../services/mission.service.js";
+import { listStoreMissions } from "../services/mission.service.js";
 
-class MissionController {
-  async createMission(req, res) {
-    try {
-      const storeId = parseInt(req.params.storeId);
-      const missionData = MissionDto.fromRequest(req.body);
+export const createMission = async (req, res, next) => {
+  const storeId = parseInt(req.params.storeId);
 
-      // 필수 필드 검증
-      if (!missionData.title || !missionData.description) {
-        return res.status(400).json({ error: 'Title and description are required' });
-      }
-
-      const createdMission = await missionService.createMission(missionData, storeId);
-      
-      return res.status(201).json({
-        message: 'Mission created successfully',
-        mission: createdMission
-      });
-    } catch (error) {
-      if (error.message.includes('not found')) {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(500).json({ error: `Failed to create mission: ${error.message}` });
-    }
+  try {
+    const result = await createMissionService(storeId, req.body);
+    return res.success(result);
+  } catch (err) {
+    next(err);
   }
-}
+};
 
-module.exports = new MissionController();
+export const challengeMission = async (req, res, next) => {
+  const missionId = parseInt(req.params.missionId);
+  const userId = req.body.userId; // 나중에 인증 붙이면 토큰에서 가져올 수 있음
+
+  try {
+    const result = await challengeMissionService(missionId, userId);
+    console.log("리턴값 확인:",result);
+    return res.success(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const handleListStoreMissions = async (req, res) => {
+    const storeId = parseInt(req.params.storeId);
+  
+    try {
+      const missions = await listStoreMissions(storeId);
+      res.status(200).json({
+        isSuccess: true,
+        code: 200,
+        message: "가게 미션 목록 조회 성공",
+        result: missions
+      });
+    } catch (err) {
+      res.status(400).json({
+        isSuccess: false,
+        code: 400,
+        message: err.message,
+        result: null
+      });
+    }
+  };

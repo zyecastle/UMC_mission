@@ -1,8 +1,7 @@
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
-
-export const prisma = new PrismaClient({ log: ["query"] });
+export const prisma = new PrismaClient();
 dotenv.config();
 
 export const pool = mysql.createPool({
@@ -29,3 +28,4 @@ export const addUser = async (data) => {
     return created.id;
   };
   
+  export default pool;

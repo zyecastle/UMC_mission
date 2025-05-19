@@ -1,24 +1,20 @@
-const storeRepository = require('../repositories/store.repository');
-const regionRepository = require('../repositories/region.repository');
-const StoreDto = require('../dtos/store.dto');
+import {insertStore} from "../repositories/store.repository.js";
+import { getAllStoreReviews } from "../repositories/user.repository.js";
+import { StoreNotFoundError } from "../errors.js";
 
-class StoreService {
-  async createStore(storeData, regionId) {
-    // 지역 존재 여부 확인
-    const region = await regionRepository.findById(regionId);
-    if (!region) {
-      throw new Error(`Region with id ${regionId} not found`);
+export const createStoreService = async (data) => {
+    const storeId = await insertStore(data);
+  
+    if (!storeId) {
+      throw new StoreNotFoundError("가게 등록에 실패했습니다", data);
     }
+  
+    return { storeId };
+  };
 
-    // 가게 생성
-    const createdStore = await storeRepository.create(storeData, regionId);
-    return new StoreDto(createdStore);
-  }
-}
+  export const listStoreReviews = async (storeId) => {
+    const reviews = await getAllStoreReviews(storeId);
+    return responseFromReviews(reviews);
+  };
 
-export const listStoreReviews = async (storeId) => {
-  const reviews = await getAllStoreReviews(storeId);
-  return responseFromReviews(reviews);
-};
-
-module.exports = new StoreService();
+ 

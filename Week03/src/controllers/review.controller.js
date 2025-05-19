@@ -1,33 +1,37 @@
-const reviewService = require('../services/review.service');
-const ReviewDto = require('../dtos/review.dto');
+import { createReviewService } from "../services/review.service.js";
+import { bodyToReview } from "../dtos/review.dto.js";
+import { listUserReviews } from "../services/review.service.js";
 
-class ReviewController {
-  async createReview(req, res) {
+export const createReview = async (req, res, next) => {
+    const storeId = parseInt(req.params.storeId);
+  
     try {
-      const storeId = parseInt(req.params.storeId);
-      const reviewData = ReviewDto.fromRequest(req.body);
-
-      // 필수 필드 검증
-      if (!reviewData.content || reviewData.rating === undefined) {
-        return res.status(400).json({ error: 'Content and rating are required' });
-      }
-
-      const createdReview = await reviewService.createReview(reviewData, storeId);
-      
-      return res.status(201).json({
-        message: 'Review added successfully',
-        review: createdReview
-      });
-    } catch (error) {
-      if (error.message.includes('not found')) {
-        return res.status(404).json({ error: error.message });
-      }
-      if (error.message.includes('must be between')) {
-        return res.status(400).json({ error: error.message });
-      }
-      return res.status(500).json({ error: `Failed to create review: ${error.message}` });
+      const result = await createReviewService(storeId, req.body);
+      return res.success(result);
+    } catch (err) {
+      next(err);
     }
-  }
-}
+  };
 
-module.exports = new ReviewController();
+export const handleListUserReviews = async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    const cursor = req.query.cursor ? parseInt(req.query.cursor) : undefined;
+  
+    try {
+      const { reviews, nextCursor } = await listUserReviews(userId, cursor);
+      res.status(200).json({
+        isSuccess: true,
+        code: 200,
+        message: "작성한 리뷰 목록 조회 성공",
+        result: reviews,
+        nextCursor
+      });
+    } catch (err) {
+      res.status(500).json({
+        isSuccess: false,
+        code: 500,
+        message: "서버 오류",
+        result: null
+      });
+    }
+  };
