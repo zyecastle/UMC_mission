@@ -134,3 +134,15 @@ model UserMission {
   @@unique([userId, missionId], map: "uq_user_mission")
   @@map("user_mission")
 }
+
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      Json
+  expiresAt DateTime
+
+  @@map("session") // 소문자 table명 필수!
+}
+
+
